@@ -1,7 +1,5 @@
 package dev.bananaumai.practice.msgpack.time
 
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -35,42 +33,62 @@ fun encodeTime(time: ZonedDateTime): ByteArray {
     return nano.toUInt().toByteArray() + sec.toULong().toByteArray()
 }
 
-fun UInt.toByteArray(): ByteArray {
-    val bufferSize = UInt.SIZE_BYTES
-
+fun UInt.toByteArray(isBigEndian: Boolean = true): ByteArray {
     var bytes = byteArrayOf()
 
-    var num = this
+    var n = this
 
-    repeat(bufferSize) {
-        val byte = num.and(0xFFu).toByte()
+    if (n == 0x00u) {
+        bytes += n.toByte()
+    } else {
+        while (n != 0x00u) {
+            val b = n.toByte()
 
-        println("%02X".format(byte))
+            bytes += b
 
-        bytes += byte
-
-        num = num.shr(Byte.SIZE_BITS)
+            n = n.shr(Byte.SIZE_BITS)
+        }
     }
 
-    return bytes.reversedArray()
+    val padding = 0x00u.toByte()
+    var paddings = byteArrayOf()
+    repeat(UInt.SIZE_BYTES - bytes.count()) {
+        paddings += padding
+    }
+
+    return if (isBigEndian) {
+        paddings + bytes.reversedArray()
+    } else {
+        paddings + bytes
+    }
 }
 
-fun ULong.toByteArray(): ByteArray {
-    val bufferSize = ULong.SIZE_BYTES
-
+fun ULong.toByteArray(isBigEndian: Boolean = true): ByteArray {
     var bytes = byteArrayOf()
 
-    var num = this
+    var n = this
 
-    repeat(bufferSize) {
-        val byte = num.and(0xFFu).toByte()
+    if (n == 0x00UL) {
+        bytes += n.toByte()
+    } else {
+        while (n != 0x00UL) {
+            val b = n.toByte()
 
-        println("%02X".format(byte))
+            bytes += b
 
-        bytes += byte
-
-        num = num.shr(Byte.SIZE_BITS)
+            n = n.shr(Byte.SIZE_BITS)
+        }
     }
 
-    return bytes.reversedArray()
+    val padding = 0x00.toByte()
+    var paddings = byteArrayOf()
+    repeat(ULong.SIZE_BYTES - bytes.count()) {
+        paddings += padding
+    }
+
+    return if (isBigEndian) {
+        paddings + bytes.reversedArray()
+    } else {
+        paddings + bytes
+    }
 }

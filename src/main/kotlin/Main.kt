@@ -1,5 +1,7 @@
 package dev.bananaumai.practice.msgpack.time
 
+import org.msgpack.core.MessageBufferPacker
+import org.msgpack.core.MessagePack
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -14,6 +16,17 @@ fun main() {
     val encoded = encodeTime(time)
 
     println(encoded.joinToString(" ") { "%02X".format(it) } )
+
+    val packer = MessagePack.newDefaultBufferPacker()
+    packer.packTime(time)
+
+    println(packer.toByteArray().joinToString(" ") { "%02X".format(it) } )
+}
+
+fun MessageBufferPacker.packTime(time: ZonedDateTime) {
+    val payload = encodeTime(time)
+    packExtensionTypeHeader(-1, payload.size)
+    writePayload(payload)
 }
 
 fun encodeTime(time: ZonedDateTime): ByteArray {
